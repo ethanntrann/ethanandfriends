@@ -1,6 +1,7 @@
 services:
-  - type: static
+  - type: web
     name: ethanandfriends
+    runtime: static
     plan: free
     buildCommand: ""
     staticPublishPath: .
