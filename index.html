@@ -14,15 +14,30 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <section id="welcomeOverlay" class="welcome-overlay" aria-label="Choose profile">
+      <div class="welcome-card">
+        <p class="eyebrow">Welcome</p>
+        <h1>Who is planning right now?</h1>
+        <p>Select your profile before entering the trip planner.</p>
+        <div class="profile-grid">
+          <button class="profile-option doria" type="button" data-user="Doria">Doria</button>
+          <button class="profile-option angela" type="button" data-user="Angela">Angela</button>
+          <button class="profile-option justin" type="button" data-user="Justin">Justin</button>
+          <button class="profile-option ethan" type="button" data-user="Ethan">Ethan</button>
+        </div>
+      </div>
+    </section>
+
     <main class="app-shell">
       <section class="hero">
         <nav class="topbar" aria-label="Primary">
           <a class="brand" href="#planner">ethan<span>andfriends</span></a>
+          <button id="profileButton" class="profile-button" type="button">Choose user</button>
         </nav>
 
         <div class="hero-content">
           <p class="eyebrow">Senior trip planner</p>
-          <h1>Plan Europe flights, stays, activities, and days.</h1>
+          <h1>Plan flights, stays, activities, and days.</h1>
           <p>
             Search one tab at a time, compare practical options, and build a
             timed calendar for the trip.
@@ -91,6 +106,17 @@
             <h2 id="guideTitle">London, United Kingdom</h2>
           </div>
           <div id="tripInsight" class="trip-insight"></div>
+          <section class="comments-box" aria-label="Trip comments">
+            <div class="section-heading comments-heading">
+              <p>Comments</p>
+              <h2>Group notes</h2>
+            </div>
+            <div id="commentList" class="comment-list"></div>
+            <form id="commentForm" class="comment-form">
+              <input id="commentInput" type="text" placeholder="Write a comment..." required />
+              <button type="submit">Send</button>
+            </form>
+          </section>
         </aside>
       </section>
 

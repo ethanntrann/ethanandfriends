@@ -11,6 +11,10 @@
   --white: #ffffff;
   --paper: #f6f8fb;
   --shadow: 0 22px 70px rgba(23, 32, 51, 0.14);
+  --doria: #d9a400;
+  --angela: #e45d9a;
+  --ethan: #1769e8;
+  --justin: #15975a;
 }
 
 * {
@@ -27,6 +31,77 @@ body {
   color: var(--ink);
   background: #f8fbff;
 }
+
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background:
+    linear-gradient(135deg, rgba(12, 25, 45, 0.9), rgba(23, 105, 232, 0.4)),
+    url("https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=1600&q=80");
+  background-size: cover;
+  background-position: center;
+}
+
+.welcome-overlay.hidden {
+  display: none;
+}
+
+.welcome-card {
+  width: min(620px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 8px;
+  padding: clamp(24px, 5vw, 42px);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.welcome-card h1 {
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-size: clamp(2rem, 6vw, 4rem);
+}
+
+.welcome-card p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.profile-option,
+.profile-button {
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  min-height: 48px;
+  padding: 0 18px;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--white);
+  font-weight: 800;
+}
+
+.profile-option {
+  border: 0;
+  color: var(--white);
+}
+
+.profile-option.doria { background: var(--doria); }
+.profile-option.angela { background: var(--angela); }
+.profile-option.ethan { background: var(--ethan); }
+.profile-option.justin { background: var(--justin); }
+
+body[data-user="doria"] .profile-button { background: var(--doria); }
+body[data-user="angela"] .profile-button { background: var(--angela); }
+body[data-user="ethan"] .profile-button { background: var(--ethan); }
+body[data-user="justin"] .profile-button { background: var(--justin); }
 
 button,
 input,
@@ -65,7 +140,8 @@ button {
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .brand {
@@ -137,7 +213,10 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, minmax(210px, 1fr)) 155px 155px 120px auto;
   gap: 12px;
-  padding: 20px;
+  padding: 22px;
+  background:
+    linear-gradient(180deg, rgba(238, 245, 255, 0.72), rgba(255, 255, 255, 0)),
+    var(--white);
 }
 
 .field {
@@ -156,7 +235,8 @@ h1 {
 .field input,
 .field select,
 .event-form input,
-.event-form select {
+.event-form select,
+.comment-form input {
   width: 100%;
   min-height: 52px;
   border: 1px solid #aeb8ca;
@@ -175,7 +255,8 @@ h1 {
 }
 
 .search-button,
-.event-form button {
+.event-form button,
+.comment-form button {
   align-self: end;
   min-height: 52px;
   border: 0;
@@ -187,7 +268,8 @@ h1 {
 }
 
 .search-button:hover,
-.event-form button:hover {
+.event-form button:hover,
+.comment-form button:hover {
   background: var(--blue-dark);
 }
 
@@ -307,6 +389,7 @@ h1 {
   color: var(--blue-dark);
   text-align: center;
   font-weight: 800;
+  line-height: 1.25;
 }
 
 .price span {
@@ -367,6 +450,61 @@ h1 {
   background: rgba(255, 255, 255, 0.74);
   color: #344054;
   line-height: 1.65;
+}
+
+.comments-box {
+  margin-top: 18px;
+}
+
+.comments-heading h2 {
+  font-size: 1.2rem;
+}
+
+.comment-list {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  margin-top: 12px;
+  overflow: auto;
+}
+
+.comment-item {
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.8);
+  line-height: 1.45;
+}
+
+.comment-item strong {
+  margin-right: 4px;
+}
+
+.comment-item.doria { border-left-color: var(--doria); }
+.comment-item.angela { border-left-color: var(--angela); }
+.comment-item.ethan { border-left-color: var(--ethan); }
+.comment-item.justin { border-left-color: var(--justin); }
+.comment-item.doria strong { color: var(--doria); }
+.comment-item.angela strong { color: var(--angela); }
+.comment-item.ethan strong { color: var(--ethan); }
+.comment-item.justin strong { color: var(--justin); }
+
+.comment-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.comment-form input {
+  min-height: 46px;
+}
+
+.comment-form button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 16px;
 }
 
 .friend-list {
@@ -624,7 +762,9 @@ h1 {
   }
 
   .search-form,
-  .time-row {
+  .time-row,
+  .profile-grid,
+  .comment-form {
     grid-template-columns: 1fr;
   }
 

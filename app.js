@@ -88,6 +88,22 @@ const hotelBrands = [
   ["B&B Hotels", "basic low-cost rooms", "https://www.hotel-bb.com"],
 ];
 
+const activityProviders = [
+  ["GetYourGuide", "tours and tickets", "https://www.getyourguide.com"],
+  ["Viator", "guided tours and day trips", "https://www.viator.com"],
+  ["Tiqets", "museum and attraction tickets", "https://www.tiqets.com"],
+  ["Klook", "activities and passes", "https://www.klook.com"],
+  ["Withlocals", "local private experiences", "https://www.withlocals.com"],
+  ["Eatwith", "food experiences", "https://www.eatwith.com"],
+];
+
+const profileColors = {
+  Doria: "doria",
+  Angela: "angela",
+  Justin: "justin",
+  Ethan: "ethan",
+};
+
 const state = {
   mode: "flights",
   searched: {
@@ -99,6 +115,8 @@ const state = {
     activityDate: "2027-06-08",
   },
   events: JSON.parse(localStorage.getItem("ethanandfriends-calendar") || "{}"),
+  comments: JSON.parse(localStorage.getItem("ethanandfriends-comments") || "[]"),
+  user: localStorage.getItem("ethanandfriends-user") || "",
   calendarMonth: 5,
   calendarYear: 2027,
   selectedDate: "2027-06-08",
@@ -129,6 +147,11 @@ const startTime = document.querySelector("#startTime");
 const endTime = document.querySelector("#endTime");
 const prevMonth = document.querySelector("#prevMonth");
 const nextMonth = document.querySelector("#nextMonth");
+const welcomeOverlay = document.querySelector("#welcomeOverlay");
+const profileButton = document.querySelector("#profileButton");
+const commentForm = document.querySelector("#commentForm");
+const commentInput = document.querySelector("#commentInput");
+const commentList = document.querySelector("#commentList");
 
 function fullName(item) {
   return `${item.city}, ${item.country}`;
@@ -198,6 +221,7 @@ function setMode(mode) {
   document.body.dataset.mode = mode;
   destinationLabel.textContent = mode === "flights" ? "To" : "Destination";
   departLabel.textContent = mode === "activities" ? "Date" : mode === "hotels" ? "Check-in" : "Depart";
+  document.querySelector(".return-field span").textContent = mode === "hotels" ? "Check-out" : "Return";
   returnInput.closest(".field").style.display = mode === "activities" || mode === "calendar" ? "none" : "";
   fromInput.closest(".field").style.display = mode === "flights" ? "" : "none";
   form.style.display = mode === "calendar" ? "none" : "";
@@ -208,28 +232,60 @@ function saveEvents() {
   localStorage.setItem("ethanandfriends-calendar", JSON.stringify(state.events));
 }
 
-function bookingHotelUrl(name) {
-  const s = state.searched;
-  return `https://www.booking.com/searchresults.html?ss=${encode(fullName(s.destination))}&checkin=${s.depart}&checkout=${s.returnDate}&group_adults=${s.travelers}&no_rooms=1&selected_currency=USD&order=price`;
+function saveComments() {
+  localStorage.setItem("ethanandfriends-comments", JSON.stringify(state.comments));
 }
 
-function airlineSearchUrl(airline) {
-  const s = state.searched;
-  const route = `${s.from.airport} to ${s.destination.airport} ${s.depart} ${s.returnDate} ${s.travelers} passengers ${airline}`;
-  return `https://www.google.com/travel/flights?q=${encode(route)}`;
+function setUser(user) {
+  state.user = user;
+  localStorage.setItem("ethanandfriends-user", user);
+  document.body.dataset.user = profileColors[user] || "";
+  profileButton.textContent = `${user}'s profile`;
+  welcomeOverlay.classList.add("hidden");
+  renderComments();
 }
 
-function activityUrl(activity) {
-  const s = state.searched;
-  return `https://www.google.com/search?q=${encode(`${activity} ${fullName(s.destination)} ${s.activityDate} ${s.travelers} tickets official`)}`;
+function renderComments() {
+  if (!state.comments.length) {
+    commentList.innerHTML = `<div class="empty-state">No comments yet. Pick a profile and start the group chat.</div>`;
+    return;
+  }
+
+  commentList.innerHTML = state.comments
+    .map(
+      (comment) => `
+        <article class="comment-item ${profileColors[comment.user] || ""}">
+          <strong>${comment.user}:</strong>
+          <span>${comment.text}</span>
+        </article>
+      `,
+    )
+    .join("");
 }
 
-function renderDealCards(items, label) {
+function bookingHotelUrl(name, url) {
+  const s = state.searched;
+  const fallback = `?destination=${encode(fullName(s.destination))}&checkin=${s.depart}&checkout=${s.returnDate}&adults=${s.travelers}`;
+  return `${url}${fallback}`;
+}
+
+function airlineSearchUrl(airline, url) {
+  const s = state.searched;
+  const params = `?from=${encode(s.from.airport)}&to=${encode(s.destination.airport)}&depart=${s.depart}&return=${s.returnDate}&adults=${s.travelers}`;
+  return `${url}${params}`;
+}
+
+function activityUrl(url) {
+  const s = state.searched;
+  return `${url}?q=${encode(fullName(s.destination))}&date=${s.activityDate}&adults=${s.travelers}`;
+}
+
+function renderDealCards(items) {
   results.innerHTML = items
     .map(
       (item) => `
         <article class="deal-card">
-          <div class="price"><span>${label}</span>$${item.price}</div>
+          <div class="price"><span>price</span>Live on site</div>
           <div>
             <h3>${item.title}</h3>
             <p>${item.body}</p>
@@ -256,57 +312,50 @@ function renderResults() {
   if (state.mode === "flights") {
     modeLabel.textContent = "Flight finder";
     resultsTitle.textContent = `${s.from.city} to ${s.destination.city}`;
-    dealSummary.innerHTML = `<span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span><span class="summary-pill">${s.travelers} people</span><span class="summary-pill">Sorted lowest estimate first</span>`;
+    dealSummary.innerHTML = `<span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span><span class="summary-pill">${s.travelers} people</span><span class="summary-pill">Direct airline sites</span>`;
     const deals = airlines
-      .map(([name], index) => {
-        const price = Math.max(380, s.destination.flightBase + ((s.destination.city.charCodeAt(0) + index * 41) % 160) - 42);
+      .map(([name, url]) => {
         return {
           title: name,
-          price,
-          body: `Search ${name} options for ${s.from.airport} to ${s.destination.airport}, ${formatDate(s.depart)} to ${formatDate(s.returnDate)}.`,
+          body: `Open ${name} for ${s.from.airport} to ${s.destination.airport}, ${formatDate(s.depart)} to ${formatDate(s.returnDate)}. Confirm the live price on the airline site before booking.`,
           tags: ["Route included", "Dates included", "Direct provider search"],
-          href: airlineSearchUrl(name),
-          cta: "Search flights",
+          href: airlineSearchUrl(name, url),
+          cta: "Open airline",
         };
       })
-      .sort((a, b) => a.price - b.price)
       .slice(0, 6);
-    renderDealCards(deals, "from");
+    renderDealCards(deals);
   }
 
   if (state.mode === "hotels") {
     modeLabel.textContent = "Hotel finder";
     resultsTitle.textContent = `Hotels in ${s.destination.city}`;
-    dealSummary.innerHTML = `<span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span><span class="summary-pill">${s.travelers} people</span><span class="summary-pill">Booking link includes dates</span>`;
+    dealSummary.innerHTML = `<span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span><span class="summary-pill">${s.travelers} people</span><span class="summary-pill">Direct hotel brand sites</span>`;
     const deals = hotelBrands
-      .map(([name, style], index) => {
-        const price = Math.max(68, s.destination.hotelBase + ((s.destination.city.charCodeAt(1) + index * 31) % 76) - 22);
+      .map(([name, style, url]) => {
         return {
           title: name,
-          price,
-          body: `${style}. Search ${fullName(s.destination)} with your exact check-in, checkout, and people count.`,
-          tags: ["Destination included", "Dates included", `${s.travelers} people`],
-          href: bookingHotelUrl(name),
-          cta: "Search hotels",
+          body: `${style}. Open the brand site with ${fullName(s.destination)}, check-in ${s.depart}, check-out ${s.returnDate}, and ${s.travelers} people attached to the link.`,
+          tags: ["Destination attached", "Dates attached", `${s.travelers} people`],
+          href: bookingHotelUrl(name, url),
+          cta: "Open hotel",
         };
       })
-      .sort((a, b) => a.price - b.price);
-    renderDealCards(deals, "nightly");
+    renderDealCards(deals);
   }
 
   if (state.mode === "activities") {
     modeLabel.textContent = "Activity finder";
     resultsTitle.textContent = `Activities in ${s.destination.city}`;
     dealSummary.innerHTML = `<span class="summary-pill">${formatDate(s.activityDate)}</span><span class="summary-pill">${s.travelers} people</span><span class="summary-pill">Popular activities</span>`;
-    const deals = s.destination.activities.map((activity, index) => ({
-      title: activity,
-      price: [0, 18, 28, 42][index] || 24,
-      body: `Search official tickets and availability for ${formatDate(s.activityDate)} for ${s.travelers} people.`,
+    const deals = activityProviders.map(([name, style, url]) => ({
+      title: name,
+      body: `Open ${name} for ${style} in ${fullName(s.destination)} on ${formatDate(s.activityDate)} for ${s.travelers} people.`,
       tags: ["Date included", `${s.travelers} people`, "Add to calendar"],
-      href: activityUrl(activity),
-      cta: "Search activity",
+      href: activityUrl(url),
+      cta: "Open activity",
     }));
-    renderDealCards(deals, "from");
+    renderDealCards(deals);
   }
 
   if (state.mode === "calendar") {
@@ -473,7 +522,38 @@ dayEvents.addEventListener("click", (event) => {
   renderCalendar();
 });
 
+document.querySelectorAll(".profile-option").forEach((button) => {
+  button.addEventListener("click", () => setUser(button.dataset.user));
+});
+
+profileButton.addEventListener("click", () => {
+  welcomeOverlay.classList.remove("hidden");
+});
+
+commentForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!state.user) {
+    welcomeOverlay.classList.remove("hidden");
+    return;
+  }
+  const text = commentInput.value.trim();
+  if (!text) return;
+  state.comments.push({
+    user: state.user,
+    text,
+    createdAt: new Date().toISOString(),
+  });
+  saveComments();
+  commentInput.value = "";
+  renderComments();
+});
+
 fromInput.value = fullName(state.searched.from);
 destinationInput.value = fullName(state.searched.destination);
+if (state.user) {
+  setUser(state.user);
+} else {
+  renderComments();
+}
 setMode("flights");
 renderCalendar();
