@@ -1,0 +1,10 @@
+services:
+  - type: static
+    name: ethanandfriends
+    plan: free
+    buildCommand: ""
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
