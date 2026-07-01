@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="ethanandfriends is a senior trip planner for Ethan, Angela, Doria, and Justin."
+      content="ethanandfriends is a Europe senior trip planner for Ethan, Angela, Doria, and Justin."
     />
     <title>ethanandfriends</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -19,69 +19,49 @@
   <body>
     <main class="app-shell">
       <section class="hero">
-        <nav class="topbar" aria-label="Travel tools">
-          <a class="brand" href="#search">ethan<span>andfriends</span></a>
-          <div class="trip-chip">Senior Trip 2027</div>
+        <nav class="topbar" aria-label="Primary">
+          <a class="brand" href="#planner">ethan<span>andfriends</span></a>
+          <div class="trip-chip">Europe only: May 28 - July 31, 2027</div>
         </nav>
 
-        <div class="hero-grid">
-          <div class="hero-copy">
-            <p class="eyebrow">For Ethan, Angela, Doria, and Justin</p>
-            <h1>Find the cheapest way to make summer 2027 unforgettable.</h1>
-            <p>
-              Search flights, compare hotels, discover popular activities, and
-              keep the group itinerary tidy in one friendly planner.
-            </p>
-          </div>
-
-          <div class="quick-card" aria-label="Trip window">
-            <span>Best travel window</span>
-            <strong>May 28 - July 31, 2027</strong>
-            <p>Flexible dates usually unlock better flight and hotel prices.</p>
-          </div>
+        <div class="hero-content">
+          <p class="eyebrow">Senior trip planner</p>
+          <h1>Pick a Europe city. Build the trip in minutes.</h1>
+          <p>
+            Search direct flight and hotel options, discover popular activities,
+            and organize each travel day on a real calendar.
+          </p>
         </div>
       </section>
 
-      <section id="search" class="search-hub" aria-label="Trip search">
-        <div class="mode-tabs" role="tablist" aria-label="Search categories">
-          <button class="tab active" data-mode="flights" type="button">
-            <span aria-hidden="true">FL</span> Flights
-          </button>
-          <button class="tab" data-mode="hotels" type="button">
-            <span aria-hidden="true">HT</span> Hotels
-          </button>
-          <button class="tab" data-mode="activities" type="button">
-            <span aria-hidden="true">DO</span> Activities
-          </button>
-          <button class="tab" data-mode="calendar" type="button">
-            <span aria-hidden="true">CA</span> Calendar
-          </button>
-        </div>
-
+      <section id="planner" class="planner-card" aria-label="Europe trip planner">
         <form class="search-form" id="travelForm">
-          <label class="field">
-            <span>Destination</span>
+          <label class="field destination-field">
+            <span>Europe destination</span>
             <input
               id="destination"
               name="destination"
               type="text"
-              placeholder="Tokyo, Japan"
+              placeholder="London, United Kingdom"
               autocomplete="off"
+              aria-expanded="false"
+              aria-controls="suggestions"
               required
             />
+            <div id="suggestions" class="suggestions" role="listbox"></div>
           </label>
 
           <label class="field">
             <span>Depart</span>
-            <input id="departDate" name="departDate" type="date" value="2027-06-08" />
+            <input id="departDate" name="departDate" type="date" min="2027-05-28" max="2027-07-31" value="2027-06-08" />
           </label>
 
           <label class="field">
             <span>Return</span>
-            <input id="returnDate" name="returnDate" type="date" value="2027-06-18" />
+            <input id="returnDate" name="returnDate" type="date" min="2027-05-28" max="2027-07-31" value="2027-06-18" />
           </label>
 
-          <label class="field compact">
+          <label class="field">
             <span>Travelers</span>
             <select id="travelers" name="travelers">
               <option value="4" selected>4 friends</option>
@@ -94,31 +74,30 @@
           <button class="search-button" type="submit">Search</button>
         </form>
 
-        <div class="helper-row">
-          <label><input id="flexDates" type="checkbox" checked /> flexible dates</label>
-          <label><input id="budgetMode" type="checkbox" checked /> cheapest first</label>
-          <label><input id="groupFriendly" type="checkbox" checked /> group friendly</label>
+        <div class="mode-tabs" role="tablist" aria-label="Search categories">
+          <button class="tab active" data-mode="flights" type="button">Flights</button>
+          <button class="tab" data-mode="hotels" type="button">Hotels</button>
+          <button class="tab" data-mode="activities" type="button">Activities</button>
+          <button class="tab" data-mode="calendar" type="button">Calendar</button>
         </div>
       </section>
 
-      <section class="content-grid">
+      <section class="main-grid">
         <section class="panel results-panel">
           <div class="section-heading">
             <p id="modeLabel">Flight finder</p>
-            <h2 id="resultsTitle">Search a destination to compare cheap options</h2>
+            <h2 id="resultsTitle">Direct Europe deals for London</h2>
           </div>
+          <div id="dealSummary" class="deal-summary"></div>
           <div id="results" class="results"></div>
         </section>
 
-        <aside class="panel ai-panel">
+        <aside class="panel trip-panel">
           <div class="section-heading">
-            <p>AI trip helper</p>
-            <h2>Smart suggestions</h2>
+            <p>Trip guide</p>
+            <h2 id="guideTitle">London, United Kingdom</h2>
           </div>
-          <div id="aiInsight" class="ai-insight">
-            Enter a city or country and the planner will suggest budget timing,
-            activity styles, and hotel areas for the group.
-          </div>
+          <div id="aiInsight" class="trip-insight"></div>
           <div class="friend-list" aria-label="Friends">
             <span>Ethan</span>
             <span>Angela</span>
@@ -128,44 +107,45 @@
         </aside>
       </section>
 
-      <section class="details-grid">
-        <section class="panel calendar-panel">
-          <div class="section-heading row-heading">
-            <div>
-              <p>Shared itinerary</p>
-              <h2>Group calendar</h2>
-            </div>
-            <button id="clearEvents" class="ghost-button" type="button">Clear</button>
-          </div>
-
-          <form id="eventForm" class="event-form">
-            <input id="eventTitle" type="text" placeholder="Beach day, museum, flight..." required />
-            <input id="eventDate" type="date" value="2027-06-08" required />
-            <select id="eventOwner">
-              <option>Ethan</option>
-              <option>Angela</option>
-              <option>Doria</option>
-              <option>Justin</option>
-              <option>Everyone</option>
-            </select>
-            <button type="submit">Add</button>
-          </form>
-
-          <div id="eventList" class="event-list" aria-live="polite"></div>
-        </section>
-
-        <section class="panel checklist-panel">
+      <section class="panel calendar-panel" id="calendarSection">
+        <div class="calendar-header">
           <div class="section-heading">
-            <p>Traveler details</p>
-            <h2>Before you book</h2>
+            <p>Group calendar</p>
+            <h2 id="calendarTitle">June 2027</h2>
           </div>
-          <ul class="checklist">
-            <li>Compare nearby airports before locking dates.</li>
-            <li>Look for hotels close to transit and late-night food.</li>
-            <li>Book refundable rooms while flight prices are moving.</li>
-            <li>Save one open day so the trip does not feel packed.</li>
-          </ul>
-        </section>
+          <div class="calendar-actions">
+            <button id="prevMonth" class="ghost-button" type="button">Previous</button>
+            <button id="nextMonth" class="ghost-button" type="button">Next</button>
+          </div>
+        </div>
+
+        <div class="calendar-layout">
+          <div>
+            <div class="weekday-row" aria-hidden="true">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div id="calendarGrid" class="calendar-grid" aria-label="Trip calendar"></div>
+          </div>
+
+          <aside class="day-editor" aria-live="polite">
+            <div class="section-heading">
+              <p>Selected day</p>
+              <h2 id="selectedDateTitle">June 8, 2027</h2>
+            </div>
+            <form id="eventForm" class="event-form">
+              <input id="eventTitle" type="text" placeholder="Add activity, flight, hotel check-in..." required />
+              <select id="eventOwner">
+                <option>Everyone</option>
+                <option>Ethan</option>
+                <option>Angela</option>
+                <option>Doria</option>
+                <option>Justin</option>
+              </select>
+              <button type="submit">Add to day</button>
+            </form>
+            <div id="dayEvents" class="day-events"></div>
+          </aside>
+        </div>
       </section>
     </main>
 
