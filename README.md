@@ -5,9 +5,11 @@ A simple Europe-only senior trip planner for Ethan, Angela, Doria, and Justin.
 The app helps the group:
 
 - Search likely Europe destinations with autocomplete.
-- Review direct airline and hotel brand options sorted by estimated lowest price.
-- Discover popular activities for the selected city.
-- Add and remove plans by clicking days on a real May-July 2027 calendar.
+- Use separate flight, hotel, and activity search forms.
+- Review flight and hotel options sorted by estimated lowest price.
+- Open hotel searches with the selected destination, dates, and people filled in.
+- Discover popular activities for the selected city and date.
+- Add timed plans by clicking days on a real May-July 2027 calendar.
 
 ## Deploying on Render
 

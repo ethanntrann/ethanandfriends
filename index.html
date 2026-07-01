@@ -3,10 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="ethanandfriends is a Europe senior trip planner for Ethan, Angela, Doria, and Justin."
-    />
+    <meta name="description" content="ethanandfriends is a Europe senior trip planner." />
     <title>ethanandfriends</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,72 +18,68 @@
       <section class="hero">
         <nav class="topbar" aria-label="Primary">
           <a class="brand" href="#planner">ethan<span>andfriends</span></a>
-          <div class="trip-chip">Europe only: May 28 - July 31, 2027</div>
         </nav>
 
         <div class="hero-content">
           <p class="eyebrow">Senior trip planner</p>
-          <h1>Pick a Europe city. Build the trip in minutes.</h1>
+          <h1>Plan Europe flights, stays, activities, and days.</h1>
           <p>
-            Search direct flight and hotel options, discover popular activities,
-            and organize each travel day on a real calendar.
+            Search one tab at a time, compare practical options, and build a
+            timed calendar for the trip.
           </p>
         </div>
       </section>
 
       <section id="planner" class="planner-card" aria-label="Europe trip planner">
-        <form class="search-form" id="travelForm">
-          <label class="field destination-field">
-            <span>Europe destination</span>
-            <input
-              id="destination"
-              name="destination"
-              type="text"
-              placeholder="London, United Kingdom"
-              autocomplete="off"
-              aria-expanded="false"
-              aria-controls="suggestions"
-              required
-            />
-            <div id="suggestions" class="suggestions" role="listbox"></div>
-          </label>
-
-          <label class="field">
-            <span>Depart</span>
-            <input id="departDate" name="departDate" type="date" min="2027-05-28" max="2027-07-31" value="2027-06-08" />
-          </label>
-
-          <label class="field">
-            <span>Return</span>
-            <input id="returnDate" name="returnDate" type="date" min="2027-05-28" max="2027-07-31" value="2027-06-18" />
-          </label>
-
-          <label class="field">
-            <span>Travelers</span>
-            <select id="travelers" name="travelers">
-              <option value="4" selected>4 friends</option>
-              <option value="3">3 friends</option>
-              <option value="2">2 friends</option>
-              <option value="1">1 traveler</option>
-            </select>
-          </label>
-
-          <button class="search-button" type="submit">Search</button>
-        </form>
-
         <div class="mode-tabs" role="tablist" aria-label="Search categories">
           <button class="tab active" data-mode="flights" type="button">Flights</button>
           <button class="tab" data-mode="hotels" type="button">Hotels</button>
           <button class="tab" data-mode="activities" type="button">Activities</button>
           <button class="tab" data-mode="calendar" type="button">Calendar</button>
         </div>
+
+        <form class="search-form" id="travelForm">
+          <label class="field flight-only autocomplete-field">
+            <span>From</span>
+            <input id="fromCity" type="text" placeholder="Los Angeles, United States" autocomplete="off" required />
+            <div class="suggestions" data-for="fromCity" role="listbox"></div>
+          </label>
+
+          <label class="field autocomplete-field">
+            <span id="destinationLabel">Destination</span>
+            <input id="destination" type="text" placeholder="London, United Kingdom" autocomplete="off" required />
+            <div class="suggestions" data-for="destination" role="listbox"></div>
+          </label>
+
+          <label class="field date-field depart-field">
+            <span id="departLabel">Depart</span>
+            <input id="departDate" type="date" min="2027-05-28" max="2027-07-31" value="2027-06-08" />
+          </label>
+
+          <label class="field return-field">
+            <span>Return</span>
+            <input id="returnDate" type="date" min="2027-05-28" max="2027-07-31" value="2027-06-18" />
+          </label>
+
+          <label class="field people-field">
+            <span>People</span>
+            <select id="travelers">
+              <option value="4" selected>4 people</option>
+              <option value="3">3 people</option>
+              <option value="2">2 people</option>
+              <option value="1">1 person</option>
+            </select>
+          </label>
+
+          <button class="search-button" type="submit">Search</button>
+        </form>
       </section>
 
       <section class="main-grid">
         <section class="panel results-panel">
           <div class="section-heading">
             <p id="modeLabel">Flight finder</p>
-            <h2 id="resultsTitle">Direct Europe deals for London</h2>
+            <h2 id="resultsTitle">Search direct flight options</h2>
           </div>
           <div id="dealSummary" class="deal-summary"></div>
           <div id="results" class="results"></div>
@@ -97,20 +90,14 @@
             <p>Trip guide</p>
             <h2 id="guideTitle">London, United Kingdom</h2>
           </div>
-          <div id="aiInsight" class="trip-insight"></div>
-          <div class="friend-list" aria-label="Friends">
-            <span>Ethan</span>
-            <span>Angela</span>
-            <span>Doria</span>
-            <span>Justin</span>
-          </div>
+          <div id="tripInsight" class="trip-insight"></div>
         </aside>
       </section>
 
       <section class="panel calendar-panel" id="calendarSection">
         <div class="calendar-header">
           <div class="section-heading">
-            <p>Group calendar</p>
+            <p>Calendar</p>
             <h2 id="calendarTitle">June 2027</h2>
           </div>
           <div class="calendar-actions">
@@ -133,14 +120,17 @@
               <h2 id="selectedDateTitle">June 8, 2027</h2>
             </div>
             <form id="eventForm" class="event-form">
-              <input id="eventTitle" type="text" placeholder="Add activity, flight, hotel check-in..." required />
-              <select id="eventOwner">
-                <option>Everyone</option>
-                <option>Ethan</option>
-                <option>Angela</option>
-                <option>Doria</option>
-                <option>Justin</option>
-              </select>
+              <input id="eventTitle" type="text" placeholder="Activity or plan" required />
+              <div class="time-row">
+                <label>
+                  <span>Starts</span>
+                  <input id="startTime" type="time" value="09:00" required />
+                </label>
+                <label>
+                  <span>Ends</span>
+                  <input id="endTime" type="time" value="10:30" required />
+                </label>
+              </div>
               <button type="submit">Add to day</button>
             </form>
             <div id="dayEvents" class="day-events"></div>
