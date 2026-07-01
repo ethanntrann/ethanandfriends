@@ -456,6 +456,21 @@ h1 {
   margin-top: 18px;
 }
 
+.floating-comments {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 50;
+  width: min(360px, calc(100vw - 28px));
+  max-height: 62vh;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
 .comments-heading h2 {
   font-size: 1.2rem;
 }
@@ -463,7 +478,7 @@ h1 {
 .comment-list {
   display: grid;
   gap: 8px;
-  max-height: 260px;
+  max-height: 32vh;
   margin-top: 12px;
   overflow: auto;
 }
@@ -774,5 +789,17 @@ h1 {
 
   .calendar-actions button {
     flex: 1;
+  }
+
+  .floating-comments {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: auto;
+    max-height: 40vh;
+  }
+
+  .comment-list {
+    max-height: 20vh;
   }
 }

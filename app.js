@@ -97,6 +97,16 @@ const activityProviders = [
   ["Eatwith", "food experiences", "https://www.eatwith.com"],
 ];
 
+const featuredActivities = {
+  London: ["Tower of London tickets", "West End theatre show", "Thames River cruise", "British Museum guided tour", "London Eye tickets", "Warner Bros. Studio Tour"],
+  Paris: ["Eiffel Tower summit ticket", "Louvre Museum timed entry", "Seine River dinner cruise", "Versailles Palace day trip", "Montmartre walking tour", "Paris food tour"],
+  Rome: ["Colosseum arena tour", "Vatican Museums entry", "Roman food tour", "Trevi Fountain walking tour", "Pompeii day trip", "Pasta making class"],
+  Barcelona: ["Sagrada Familia guided tour", "Park Guell ticket", "Gothic Quarter walking tour", "Barcelona tapas tour", "Camp Nou experience", "Montserrat day trip"],
+  Amsterdam: ["Van Gogh Museum ticket", "Amsterdam canal cruise", "Anne Frank walking tour", "Rijksmuseum guided tour", "Zaanse Schans day trip", "Bike tour"],
+  Lisbon: ["Sintra and Pena Palace day trip", "Lisbon food tour", "Belem walking tour", "Tagus River cruise", "Fado show", "Alfama guided walk"],
+  Athens: ["Acropolis guided tour", "Parthenon ticket", "Athens food tour", "Aegina island day trip", "Ancient Agora ticket", "Sunset temple tour"],
+};
+
 const profileColors = {
   Doria: "doria",
   Angela: "angela",
@@ -280,6 +290,11 @@ function activityUrl(url) {
   return `${url}?q=${encode(fullName(s.destination))}&date=${s.activityDate}&adults=${s.travelers}`;
 }
 
+function activityBookingUrl(activity) {
+  const s = state.searched;
+  return `https://www.getyourguide.com/s/?q=${encode(`${activity} ${fullName(s.destination)}`)}&date_from=${s.activityDate}&date_to=${s.activityDate}&participants=${s.travelers}`;
+}
+
 function renderDealCards(items) {
   results.innerHTML = items
     .map(
@@ -317,7 +332,7 @@ function renderResults() {
       .map(([name, url]) => {
         return {
           title: name,
-          body: `Open ${name} for ${s.from.airport} to ${s.destination.airport}, ${formatDate(s.depart)} to ${formatDate(s.returnDate)}. Confirm the live price on the airline site before booking.`,
+          body: `Open ${name} for ${s.from.airport} to ${s.destination.airport}, ${formatDate(s.depart)} to ${formatDate(s.returnDate)}. The exact current price appears on the airline site.`,
           tags: ["Route included", "Dates included", "Direct provider search"],
           href: airlineSearchUrl(name, url),
           cta: "Open airline",
@@ -340,7 +355,7 @@ function renderResults() {
           href: bookingHotelUrl(name, url),
           cta: "Open hotel",
         };
-      })
+      });
     renderDealCards(deals);
   }
 
@@ -348,12 +363,13 @@ function renderResults() {
     modeLabel.textContent = "Activity finder";
     resultsTitle.textContent = `Activities in ${s.destination.city}`;
     dealSummary.innerHTML = `<span class="summary-pill">${formatDate(s.activityDate)}</span><span class="summary-pill">${s.travelers} people</span><span class="summary-pill">Popular activities</span>`;
-    const deals = activityProviders.map(([name, style, url]) => ({
-      title: name,
-      body: `Open ${name} for ${style} in ${fullName(s.destination)} on ${formatDate(s.activityDate)} for ${s.travelers} people.`,
-      tags: ["Date included", `${s.travelers} people`, "Add to calendar"],
-      href: activityUrl(url),
-      cta: "Open activity",
+    const activities = featuredActivities[s.destination.city] || s.destination.activities;
+    const deals = activities.map((activity) => ({
+      title: activity,
+      body: `Book ${activity} in ${fullName(s.destination)} on ${formatDate(s.activityDate)} for ${s.travelers} people. The booking page shows the current live price.`,
+      tags: ["Actual activity", "Date included", `${s.travelers} people`],
+      href: activityBookingUrl(activity),
+      cta: "Book activity",
     }));
     renderDealCards(deals);
   }
@@ -394,15 +410,15 @@ function renderCalendar() {
     month: "long",
     year: "numeric",
   });
-  prevMonth.disabled = state.calendarMonth <= 4;
-  nextMonth.disabled = state.calendarMonth >= 6;
+  prevMonth.disabled = false;
+  nextMonth.disabled = false;
   const firstDay = new Date(state.calendarYear, state.calendarMonth, 1).getDay();
   const daysInMonth = new Date(state.calendarYear, state.calendarMonth + 1, 0).getDate();
   const cells = [];
   for (let i = 0; i < firstDay; i += 1) cells.push({});
   for (let day = 1; day <= daysInMonth; day += 1) {
     const dateKey = toDateKey(state.calendarYear, state.calendarMonth, day);
-    cells.push({ day, dateKey, outside: dateKey < "2027-05-28" || dateKey > "2027-07-31" });
+    cells.push({ day, dateKey, outside: false });
   }
   while (cells.length % 7 !== 0) cells.push({});
 
@@ -483,17 +499,21 @@ calendarGrid.addEventListener("click", (event) => {
 });
 
 prevMonth.addEventListener("click", () => {
-  if (state.calendarMonth > 4) {
-    state.calendarMonth -= 1;
-    renderCalendar();
+  state.calendarMonth -= 1;
+  if (state.calendarMonth < 0) {
+    state.calendarMonth = 11;
+    state.calendarYear -= 1;
   }
+  renderCalendar();
 });
 
 nextMonth.addEventListener("click", () => {
-  if (state.calendarMonth < 6) {
-    state.calendarMonth += 1;
-    renderCalendar();
+  state.calendarMonth += 1;
+  if (state.calendarMonth > 11) {
+    state.calendarMonth = 0;
+    state.calendarYear += 1;
   }
+  renderCalendar();
 });
 
 eventForm.addEventListener("submit", (event) => {

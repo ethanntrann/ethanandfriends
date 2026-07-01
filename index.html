@@ -68,12 +68,12 @@
 
           <label class="field date-field depart-field">
             <span id="departLabel">Depart</span>
-            <input id="departDate" type="date" min="2027-05-28" max="2027-07-31" value="2027-06-08" />
+            <input id="departDate" type="date" value="2027-06-08" />
           </label>
 
           <label class="field return-field">
             <span>Return</span>
-            <input id="returnDate" type="date" min="2027-05-28" max="2027-07-31" value="2027-06-18" />
+            <input id="returnDate" type="date" value="2027-06-18" />
           </label>
 
           <label class="field people-field">
@@ -106,17 +106,6 @@
             <h2 id="guideTitle">London, United Kingdom</h2>
           </div>
           <div id="tripInsight" class="trip-insight"></div>
-          <section class="comments-box" aria-label="Trip comments">
-            <div class="section-heading comments-heading">
-              <p>Comments</p>
-              <h2>Group notes</h2>
-            </div>
-            <div id="commentList" class="comment-list"></div>
-            <form id="commentForm" class="comment-form">
-              <input id="commentInput" type="text" placeholder="Write a comment..." required />
-              <button type="submit">Send</button>
-            </form>
-          </section>
         </aside>
       </section>
 
@@ -164,6 +153,18 @@
         </div>
       </section>
     </main>
+
+    <aside class="comments-box floating-comments" aria-label="Trip comments">
+      <div class="section-heading comments-heading">
+        <p>Comments</p>
+        <h2>Group notes</h2>
+      </div>
+      <div id="commentList" class="comment-list"></div>
+      <form id="commentForm" class="comment-form">
+        <input id="commentInput" type="text" placeholder="Write a comment..." required />
+        <button type="submit">Send</button>
+      </form>
+    </aside>
 
     <script src="app.js"></script>
   </body>
