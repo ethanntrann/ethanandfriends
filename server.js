@@ -116,19 +116,22 @@ async function callSerpApi(params) {
 }
 
 async function flights(request, response, url) {
-  const payload = await callSerpApi({
+  const isOneWay = url.searchParams.get("trip_type") === "oneway";
+  const params = {
     engine: "google_flights",
     departure_id: url.searchParams.get("departure_id"),
     arrival_id: url.searchParams.get("arrival_id"),
     outbound_date: url.searchParams.get("outbound_date"),
-    return_date: url.searchParams.get("return_date"),
     adults: url.searchParams.get("adults") || "1",
-    type: "1",
+    type: isOneWay ? "2" : "1",
     currency: "USD",
     hl: "en",
     gl: "us",
     deep_search: "true",
-  });
+  };
+  if (!isOneWay) params.return_date = url.searchParams.get("return_date");
+
+  const payload = await callSerpApi(params);
 
   if (payload.error) return json(response, 200, payload);
   const rawResults = [...(payload.best_flights || []), ...(payload.other_flights || [])];

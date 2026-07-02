@@ -121,6 +121,7 @@ const profileColors = {
 const state = {
   mode: "flights",
   searched: {
+    tripType: "roundtrip",
     from: cityAliases[0],
     destination: europeCities[0],
     depart: "2027-06-08",
@@ -144,6 +145,7 @@ const fromInput = document.querySelector("#fromCity");
 const destinationInput = document.querySelector("#destination");
 const departInput = document.querySelector("#departDate");
 const returnInput = document.querySelector("#returnDate");
+const tripTypeInputs = document.querySelectorAll('input[name="tripType"]');
 const travelersInput = document.querySelector("#travelers");
 const destinationLabel = document.querySelector("#destinationLabel");
 const departLabel = document.querySelector("#departLabel");
@@ -168,6 +170,8 @@ const profileButton = document.querySelector("#profileButton");
 const commentForm = document.querySelector("#commentForm");
 const commentInput = document.querySelector("#commentInput");
 const commentList = document.querySelector("#commentList");
+const commentsBox = document.querySelector(".floating-comments");
+const toggleComments = document.querySelector("#toggleComments");
 const assistantForm = document.querySelector("#assistantForm");
 const assistantInput = document.querySelector("#assistantInput");
 const assistantReply = document.querySelector("#assistantReply");
@@ -178,6 +182,22 @@ function fullName(item) {
 
 function encode(value) {
   return encodeURIComponent(value);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderAssistantText(value) {
+  return escapeHtml(value)
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+    .replace(/\n/g, "<br>");
 }
 
 function dateCompact(date) {
@@ -241,8 +261,10 @@ function setMode(mode) {
   destinationLabel.textContent = mode === "flights" ? "To" : "Destination";
   departLabel.textContent = mode === "activities" ? "Date" : mode === "hotels" ? "Check-in" : "Depart";
   document.querySelector(".return-field span").textContent = mode === "hotels" ? "Check-out" : "Return";
-  returnInput.closest(".field").style.display = mode === "activities" || mode === "calendar" ? "none" : "";
+  const hideReturn = mode === "activities" || mode === "calendar" || (mode === "flights" && state.searched.tripType === "oneway");
+  returnInput.closest(".field").style.display = hideReturn ? "none" : "";
   fromInput.closest(".field").style.display = mode === "flights" ? "" : "none";
+  document.querySelector(".trip-type-field").style.display = mode === "flights" ? "" : "none";
   form.style.display = mode === "calendar" ? "none" : "";
   renderResults();
 }
@@ -272,12 +294,21 @@ function renderComments() {
 
   commentList.innerHTML = state.comments
     .map(
-      (comment) => `
-        <article class="comment-item ${profileColors[comment.user] || ""}">
-          <strong>${comment.user}:</strong>
-          <span>${comment.text}</span>
+      (comment) => {
+        const profile = profileColors[comment.user] || "";
+        const time = comment.createdAt
+          ? new Date(comment.createdAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+          : "";
+        return `
+        <article class="comment-item ${profile}">
+          <div class="comment-meta">
+            <strong>${escapeHtml(comment.user)}:</strong>
+            ${time ? `<time>${time}</time>` : ""}
+          </div>
+          <span>${escapeHtml(comment.text)}</span>
         </article>
-      `,
+      `;
+      },
     )
     .join("");
 }
@@ -360,6 +391,7 @@ function assistantContext() {
     destination: fullName(state.searched.destination),
     departureAirport: state.searched.from.airport,
     arrivalAirport: state.searched.destination.airport,
+    tripType: state.searched.tripType,
     depart: state.searched.depart,
     returnDate: state.searched.returnDate,
     activityDate: state.searched.activityDate,
@@ -387,7 +419,7 @@ async function askAssistant(message) {
     assistantReply.textContent = "Add OPENROUTER_API_KEY in Render to enable Claude.";
     return;
   }
-  assistantReply.textContent = payload.error || payload.reply || "No response.";
+  assistantReply.innerHTML = renderAssistantText(payload.error || payload.reply || "No response.");
 }
 
 async function renderFlightResults(s) {
@@ -396,9 +428,10 @@ async function renderFlightResults(s) {
     departure_id: s.from.airport,
     arrival_id: s.destination.airport,
     outbound_date: s.depart,
-    return_date: s.returnDate,
     adults: String(s.travelers),
+    trip_type: s.tripType,
   });
+  if (s.tripType === "roundtrip") params.set("return_date", s.returnDate);
   const response = await fetch(`${apiBase}/api/flights?${params.toString()}`);
   const payload = await response.json();
   if (payload.setupRequired) return apiSetupMessage("Flight");
@@ -409,7 +442,8 @@ async function renderFlightResults(s) {
 
   const lowest = payload.priceInsights?.lowest_price ? `$${payload.priceInsights.lowest_price}` : "";
   dealSummary.innerHTML = `
-    <span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span>
+    <span class="summary-pill">${s.tripType === "oneway" ? "One-way" : "Roundtrip"}</span>
+    <span class="summary-pill">${s.tripType === "oneway" ? formatDate(s.depart) : `${formatDate(s.depart)} - ${formatDate(s.returnDate)}`}</span>
     <span class="summary-pill">${s.travelers} people</span>
     <span class="summary-pill">${lowest ? `Lowest seen: ${lowest}` : "Google Flights results"}</span>
   `;
@@ -544,9 +578,12 @@ function submitSearch() {
   state.searched.travelers = Number(travelersInput.value);
 
   if (state.mode === "flights") {
+    state.searched.tripType = document.querySelector('input[name="tripType"]:checked')?.value || "roundtrip";
     state.searched.from = matchCity(fromInput.value, cityAliases);
     state.searched.depart = departInput.value;
-    state.searched.returnDate = returnInput.value < departInput.value ? departInput.value : returnInput.value;
+    if (state.searched.tripType === "roundtrip") {
+      state.searched.returnDate = returnInput.value < departInput.value ? departInput.value : returnInput.value;
+    }
   } else if (state.mode === "hotels") {
     state.searched.depart = departInput.value;
     state.searched.returnDate = returnInput.value < departInput.value ? departInput.value : returnInput.value;
@@ -722,6 +759,20 @@ commentForm.addEventListener("submit", (event) => {
   saveComments();
   commentInput.value = "";
   renderComments();
+});
+
+toggleComments.addEventListener("click", () => {
+  const collapsed = commentsBox.classList.toggle("collapsed");
+  toggleComments.textContent = collapsed ? "Open" : "Minimize";
+  toggleComments.setAttribute("aria-expanded", String(!collapsed));
+});
+
+tripTypeInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    state.searched.tripType = document.querySelector('input[name="tripType"]:checked')?.value || "roundtrip";
+    const hideReturn = state.mode === "flights" && state.searched.tripType === "oneway";
+    returnInput.closest(".field").style.display = hideReturn ? "none" : "";
+  });
 });
 
 assistantForm.addEventListener("submit", (event) => {

@@ -54,6 +54,20 @@
         </div>
 
         <form class="search-form" id="travelForm">
+          <div class="field trip-type-field flight-only">
+            <span>Trip type</span>
+            <div class="segmented trip-type-options" role="radiogroup" aria-label="Flight trip type">
+              <label>
+                <input type="radio" name="tripType" value="roundtrip" checked />
+                <span>Roundtrip</span>
+              </label>
+              <label>
+                <input type="radio" name="tripType" value="oneway" />
+                <span>One-way</span>
+              </label>
+            </div>
+          </div>
+
           <label class="field flight-only autocomplete-field">
             <span>From</span>
             <input id="fromCity" type="text" placeholder="Los Angeles, United States" autocomplete="off" required />
@@ -172,14 +186,19 @@
 
     <aside class="comments-box floating-comments" aria-label="Trip comments">
       <div class="section-heading comments-heading">
-        <p>Comments</p>
-        <h2>Group notes</h2>
+        <div>
+          <p>Comments</p>
+          <h2>Group notes</h2>
+        </div>
+        <button id="toggleComments" class="comments-toggle" type="button" aria-expanded="true">Minimize</button>
       </div>
-      <div id="commentList" class="comment-list"></div>
-      <form id="commentForm" class="comment-form">
-        <input id="commentInput" type="text" placeholder="Write a comment..." required />
-        <button type="submit">Send</button>
-      </form>
+      <div class="comments-content">
+        <div id="commentList" class="comment-list"></div>
+        <form id="commentForm" class="comment-form">
+          <input id="commentInput" type="text" placeholder="Write a comment..." required />
+          <button type="submit">Send</button>
+        </form>
+      </div>
     </aside>
 
     <script src="app.js"></script>

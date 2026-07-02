@@ -12,9 +12,14 @@
   --paper: #f6f8fb;
   --shadow: 0 22px 70px rgba(23, 32, 51, 0.14);
   --doria: #d9a400;
+  --doria-soft: #fff6d1;
+  --doria-text: #9a6a00;
   --angela: #e45d9a;
+  --angela-soft: #ffeaf4;
   --ethan: #1769e8;
+  --ethan-soft: #eaf2ff;
   --justin: #15975a;
+  --justin-soft: #e8f8ef;
 }
 
 * {
@@ -211,7 +216,7 @@ h1 {
 
 .search-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(210px, 1fr)) 155px 155px 120px auto;
+  grid-template-columns: minmax(160px, 0.8fr) repeat(2, minmax(190px, 1fr)) 150px 150px 115px auto;
   gap: 12px;
   padding: 22px;
   background:
@@ -252,6 +257,42 @@ h1 {
 .event-form select:focus {
   outline: 3px solid rgba(23, 105, 232, 0.16);
   border-color: var(--blue);
+}
+
+.trip-type-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 52px;
+  border: 1px solid #aeb8ca;
+  border-radius: 8px;
+  padding: 4px;
+  background: #f5f8fc;
+}
+
+.trip-type-options label {
+  display: grid;
+  cursor: pointer;
+}
+
+.trip-type-options input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.trip-type-options span {
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.trip-type-options input:checked + span {
+  background: var(--blue);
+  color: var(--white);
+  box-shadow: 0 8px 18px rgba(23, 105, 232, 0.22);
 }
 
 .search-button,
@@ -585,6 +626,15 @@ h1 {
   white-space: pre-wrap;
 }
 
+.assistant-reply strong {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.assistant-reply em {
+  color: var(--blue-dark);
+}
+
 .comments-box {
   margin-top: 18px;
 }
@@ -602,10 +652,41 @@ h1 {
   background: rgba(255, 255, 255, 0.96);
   box-shadow: var(--shadow);
   backdrop-filter: blur(12px);
+  transition: width 180ms ease, padding 180ms ease;
+}
+
+.comments-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .comments-heading h2 {
   font-size: 1.2rem;
+}
+
+.comments-toggle {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--white);
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.floating-comments.collapsed {
+  width: min(230px, calc(100vw - 28px));
+}
+
+.floating-comments.collapsed .comments-content,
+.floating-comments.collapsed .comments-heading p {
+  display: none;
+}
+
+.floating-comments.collapsed .comments-heading h2 {
+  font-size: 1rem;
 }
 
 .comment-list {
@@ -619,23 +700,53 @@ h1 {
 .comment-item {
   border-left: 4px solid var(--blue);
   border-radius: 8px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.8);
+  padding: 11px 12px;
+  background: rgba(255, 255, 255, 0.9);
   line-height: 1.45;
+  box-shadow: 0 8px 20px rgba(23, 32, 51, 0.08);
 }
 
-.comment-item strong {
-  margin-right: 4px;
+.comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.comment-item.doria { border-left-color: var(--doria); }
-.comment-item.angela { border-left-color: var(--angela); }
-.comment-item.ethan { border-left-color: var(--ethan); }
-.comment-item.justin { border-left-color: var(--justin); }
-.comment-item.doria strong { color: var(--doria); }
-.comment-item.angela strong { color: var(--angela); }
-.comment-item.ethan strong { color: var(--ethan); }
-.comment-item.justin strong { color: var(--justin); }
+.comment-meta strong {
+  font-weight: 900;
+}
+
+.comment-meta time {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.comment-item.doria {
+  border-left-color: var(--doria);
+  background: var(--doria-soft);
+  color: var(--doria-text);
+}
+
+.comment-item.angela {
+  border-left-color: var(--angela);
+  background: var(--angela-soft);
+  color: var(--angela);
+}
+
+.comment-item.ethan {
+  border-left-color: var(--ethan);
+  background: var(--ethan-soft);
+  color: var(--ethan);
+}
+
+.comment-item.justin {
+  border-left-color: var(--justin);
+  background: var(--justin-soft);
+  color: var(--justin);
+}
 
 .comment-form {
   display: grid;
