@@ -160,7 +160,7 @@ async function hotels(request, response, url) {
 }
 
 async function assistant(request, response) {
-  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+  const apiKey = (process.env.BAYLEAF_API_KEY || process.env.OPENROUTER_API_KEY)?.trim();
   if (!apiKey) {
     return json(response, 200, {
       setupRequired: true,
@@ -174,11 +174,14 @@ async function assistant(request, response) {
   }
   const body = rawBody ? JSON.parse(rawBody) : {};
 
-  const model = process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-4";
+  const configuredModel = process.env.OPENROUTER_MODEL || "openrouter:anthropic/claude-sonnet-4";
+  const model = configuredModel.startsWith("anthropic/")
+    ? `openrouter:${configuredModel}`
+    : configuredModel;
   const context = body.context || {};
   const userMessage = String(body.message || "").slice(0, 1800);
 
-  const openRouterResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const openRouterResponse = await fetch("https://api.bayleaf.dev/v1/chat/completions", {
     method: "POST",
     headers: {
       "content-type": "application/json",
