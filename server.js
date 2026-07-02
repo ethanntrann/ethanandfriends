@@ -160,7 +160,7 @@ async function hotels(request, response, url) {
 }
 
 async function assistant(request, response) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!apiKey) {
     return json(response, 200, {
       setupRequired: true,
@@ -182,7 +182,7 @@ async function assistant(request, response) {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${apiKey}`,
+      "Authorization": `Bearer ${apiKey}`,
       "http-referer": "https://ethanandfriends.onrender.com",
       "x-title": "ethanandfriends",
     },
