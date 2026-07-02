@@ -1,10 +1,11 @@
 import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const port = process.env.PORT || 10000;
+const commentsPath = join(root, "data", "comments.json");
 const allowedOrigins = new Set([
   "https://ethanandfriends.onrender.com",
   "http://localhost:10000",
@@ -39,6 +40,68 @@ function duration(minutes) {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return `${hours ? `${hours}h ` : ""}${mins ? `${mins}m` : ""}`.trim();
+}
+
+async function readBody(request) {
+  let rawBody = "";
+  for await (const chunk of request) {
+    rawBody += chunk;
+  }
+  return rawBody ? JSON.parse(rawBody) : {};
+}
+
+async function readComments() {
+  try {
+    const contents = await readFile(commentsPath, "utf8");
+    return JSON.parse(contents);
+  } catch {
+    return [];
+  }
+}
+
+async function writeComments(comments) {
+  await mkdir(join(root, "data"), { recursive: true });
+  await writeFile(commentsPath, JSON.stringify(comments, null, 2));
+}
+
+function normalizeComment(comment) {
+  const user = String(comment.user || "").trim().slice(0, 32);
+  const text = String(comment.text || "").trim().slice(0, 700);
+  const createdAt = comment.createdAt && !Number.isNaN(Date.parse(comment.createdAt))
+    ? new Date(comment.createdAt).toISOString()
+    : new Date().toISOString();
+  if (!user || !text) return null;
+  return {
+    id: comment.id || `${Date.parse(createdAt)}-${user}-${text}`.replace(/[^a-z0-9-]/gi, "").slice(0, 96),
+    user,
+    text,
+    createdAt,
+  };
+}
+
+async function comments(request, response) {
+  const existing = await readComments();
+  if (request.method === "GET") {
+    return json(response, 200, {
+      comments: existing.slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)),
+    });
+  }
+
+  if (request.method !== "POST") return json(response, 405, { error: "Method not allowed" });
+
+  const body = await readBody(request);
+  const incoming = Array.isArray(body.comments) ? body.comments : [body];
+  const normalized = incoming.map(normalizeComment).filter(Boolean);
+  const bySignature = new Map();
+  [...existing, ...normalized].forEach((comment) => {
+    const signature = `${comment.user}|${comment.text}|${comment.createdAt}`;
+    if (!bySignature.has(signature)) bySignature.set(signature, comment);
+  });
+  const merged = [...bySignature.values()]
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    .slice(-500);
+  await writeComments(merged);
+  return json(response, 200, { comments: merged });
 }
 
 function firstSegment(result) {
@@ -171,11 +234,7 @@ async function assistant(request, response) {
     });
   }
 
-  let rawBody = "";
-  for await (const chunk of request) {
-    rawBody += chunk;
-  }
-  const body = rawBody ? JSON.parse(rawBody) : {};
+  const body = await readBody(request);
 
   const configuredModel = process.env.OPENROUTER_MODEL || "openrouter:anthropic/claude-sonnet-4";
   const model = configuredModel.startsWith("anthropic/")
@@ -264,6 +323,7 @@ createServer(async (request, response) => {
     const url = new URL(request.url, `http://${request.headers.host}`);
     if (url.pathname === "/api/flights") return flights(request, response, url);
     if (url.pathname === "/api/hotels") return hotels(request, response, url);
+    if (url.pathname === "/api/comments") return comments(request, response);
     if (url.pathname === "/api/assistant" && request.method === "POST") return assistant(request, response);
     return staticFile(request, response, url);
   } catch (error) {

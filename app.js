@@ -69,6 +69,8 @@ const cityAliases = [
 const apiBase = location.hostname === "ethanandfriends.onrender.com"
   ? "https://ethanandfriends-api.onrender.com"
   : "";
+const legacyComments = JSON.parse(localStorage.getItem("ethanandfriends-comments") || "[]");
+const commentsMigratedKey = "ethanandfriends-comments-migrated-v1";
 
 const airlines = [
   ["Norse Atlantic", "https://www.flynorse.com"],
@@ -130,7 +132,7 @@ const state = {
     activityDate: "2027-06-08",
   },
   events: JSON.parse(localStorage.getItem("ethanandfriends-calendar") || "{}"),
-  comments: JSON.parse(localStorage.getItem("ethanandfriends-comments") || "[]"),
+  comments: legacyComments,
   user: localStorage.getItem("ethanandfriends-user") || "",
   latestFlights: [],
   latestHotels: [],
@@ -275,6 +277,41 @@ function saveEvents() {
 
 function saveComments() {
   localStorage.setItem("ethanandfriends-comments", JSON.stringify(state.comments));
+}
+
+async function fetchSharedComments() {
+  const response = await fetch(`${apiBase}/api/comments`);
+  if (!response.ok) throw new Error("Could not load shared comments.");
+  const payload = await response.json();
+  return payload.comments || [];
+}
+
+async function postSharedComments(comments) {
+  const response = await fetch(`${apiBase}/api/comments`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(Array.isArray(comments) ? { comments } : comments),
+  });
+  if (!response.ok) throw new Error("Could not save shared comments.");
+  const payload = await response.json();
+  return payload.comments || [];
+}
+
+async function loadSharedComments() {
+  try {
+    commentList.innerHTML = `<div class="empty-state">Loading shared group notes...</div>`;
+    state.comments = await fetchSharedComments();
+
+    if (legacyComments.length && localStorage.getItem(commentsMigratedKey) !== "yes") {
+      state.comments = await postSharedComments(legacyComments);
+      localStorage.setItem(commentsMigratedKey, "yes");
+    }
+
+    saveComments();
+    renderComments();
+  } catch {
+    renderComments();
+  }
 }
 
 function setUser(user) {
@@ -743,7 +780,7 @@ profileButton.addEventListener("click", () => {
   welcomeOverlay.classList.remove("hidden");
 });
 
-commentForm.addEventListener("submit", (event) => {
+commentForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!state.user) {
     welcomeOverlay.classList.remove("hidden");
@@ -751,14 +788,26 @@ commentForm.addEventListener("submit", (event) => {
   }
   const text = commentInput.value.trim();
   if (!text) return;
-  state.comments.push({
+  const comment = {
     user: state.user,
     text,
     createdAt: new Date().toISOString(),
-  });
-  saveComments();
+  };
+  state.comments.push(comment);
   commentInput.value = "";
   renderComments();
+  saveComments();
+
+  try {
+    state.comments = await postSharedComments(comment);
+    saveComments();
+    renderComments();
+  } catch {
+    commentList.insertAdjacentHTML(
+      "beforeend",
+      `<div class="empty-state">This note is saved on this device, but the shared notes could not update yet.</div>`,
+    );
+  }
 });
 
 toggleComments.addEventListener("click", () => {
@@ -794,5 +843,6 @@ if (state.user) {
 } else {
   renderComments();
 }
+loadSharedComments();
 setMode("flights");
 renderCalendar();
