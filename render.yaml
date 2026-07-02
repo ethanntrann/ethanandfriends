@@ -2,6 +2,7 @@ services:
   - type: web
     name: ethanandfriends
     runtime: static
+    plan: free
     buildCommand: ""
     staticPublishPath: .
     routes:
@@ -12,6 +13,7 @@ services:
   - type: web
     name: ethanandfriends-api
     runtime: node
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     envVars:
