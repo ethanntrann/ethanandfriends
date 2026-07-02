@@ -1,6 +1,16 @@
 services:
   - type: web
     name: ethanandfriends
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
+    name: ethanandfriends-api
     runtime: node
     buildCommand: npm install
     startCommand: npm start

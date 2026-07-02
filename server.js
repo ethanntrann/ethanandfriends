@@ -5,6 +5,11 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const port = process.env.PORT || 10000;
+const allowedOrigins = new Set([
+  "https://ethanandfriends.onrender.com",
+  "http://localhost:10000",
+  "http://127.0.0.1:10000",
+]);
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -18,10 +23,14 @@ const contentTypes = {
 };
 
 function json(response, status, payload) {
-  response.writeHead(status, {
+  const headers = {
     "content-type": "application/json; charset=utf-8",
     "cache-control": "no-store",
-  });
+  };
+  if (response.req?.headers?.origin && allowedOrigins.has(response.req.headers.origin)) {
+    headers["access-control-allow-origin"] = response.req.headers.origin;
+  }
+  response.writeHead(status, headers);
   response.end(JSON.stringify(payload));
 }
 
@@ -229,7 +238,23 @@ async function staticFile(request, response, url) {
 }
 
 createServer(async (request, response) => {
+  response.req = request;
   try {
+    if (request.method === "OPTIONS") {
+      const origin = request.headers.origin;
+      const headers = {
+        "access-control-allow-methods": "GET,POST,OPTIONS",
+        "access-control-allow-headers": "content-type",
+        "access-control-max-age": "86400",
+      };
+      if (origin && allowedOrigins.has(origin)) {
+        headers["access-control-allow-origin"] = origin;
+      }
+      response.writeHead(origin && allowedOrigins.has(origin) ? 204 : 403, headers);
+      response.end();
+      return;
+    }
+
     const url = new URL(request.url, `http://${request.headers.host}`);
     if (url.pathname === "/api/flights") return flights(request, response, url);
     if (url.pathname === "/api/hotels") return hotels(request, response, url);

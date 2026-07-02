@@ -66,6 +66,10 @@ const cityAliases = [
   ...europeCities,
 ];
 
+const apiBase = location.hostname === "ethanandfriends.onrender.com"
+  ? "https://ethanandfriends-api.onrender.com"
+  : "";
+
 const airlines = [
   ["Norse Atlantic", "https://www.flynorse.com"],
   ["British Airways", "https://www.britishairways.com"],
@@ -370,7 +374,7 @@ async function askAssistant(message) {
   const text = message.trim();
   if (!text) return;
   assistantReply.textContent = "Claude is thinking...";
-  const response = await fetch("/api/assistant", {
+  const response = await fetch(`${apiBase}/api/assistant`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
@@ -395,7 +399,7 @@ async function renderFlightResults(s) {
     return_date: s.returnDate,
     adults: String(s.travelers),
   });
-  const response = await fetch(`/api/flights?${params.toString()}`);
+  const response = await fetch(`${apiBase}/api/flights?${params.toString()}`);
   const payload = await response.json();
   if (payload.setupRequired) return apiSetupMessage("Flight");
   if (payload.error) {
@@ -446,7 +450,7 @@ async function renderHotelResults(s) {
     check_out_date: s.returnDate,
     adults: String(s.travelers),
   });
-  const response = await fetch(`/api/hotels?${params.toString()}`);
+  const response = await fetch(`${apiBase}/api/hotels?${params.toString()}`);
   const payload = await response.json();
   if (payload.setupRequired) return apiSetupMessage("Hotel");
   if (payload.error) {
