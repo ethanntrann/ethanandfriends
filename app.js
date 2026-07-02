@@ -127,6 +127,8 @@ const state = {
   events: JSON.parse(localStorage.getItem("ethanandfriends-calendar") || "{}"),
   comments: JSON.parse(localStorage.getItem("ethanandfriends-comments") || "[]"),
   user: localStorage.getItem("ethanandfriends-user") || "",
+  latestFlights: [],
+  latestHotels: [],
   calendarMonth: 5,
   calendarYear: 2027,
   selectedDate: "2027-06-08",
@@ -162,6 +164,9 @@ const profileButton = document.querySelector("#profileButton");
 const commentForm = document.querySelector("#commentForm");
 const commentInput = document.querySelector("#commentInput");
 const commentList = document.querySelector("#commentList");
+const assistantForm = document.querySelector("#assistantForm");
+const assistantInput = document.querySelector("#assistantInput");
+const assistantReply = document.querySelector("#assistantReply");
 
 function fullName(item) {
   return `${item.city}, ${item.country}`;
@@ -313,6 +318,176 @@ function renderDealCards(items) {
     .join("");
 }
 
+function loadingCards(label) {
+  dealSummary.innerHTML = `<span class="summary-pill">Loading ${label} from SerpAPI</span>`;
+  results.innerHTML = `
+    <article class="deal-card">
+      <div class="price"><span>live</span>Loading</div>
+      <div>
+        <h3>Checking Google ${label}</h3>
+        <p>Fetching current prices for your selected dates and route.</p>
+      </div>
+    </article>
+  `;
+}
+
+function apiSetupMessage(type) {
+  results.innerHTML = `
+    <article class="deal-card">
+      <div class="price"><span>api</span>Setup</div>
+      <div>
+        <h3>SerpAPI key needed</h3>
+        <p>Add your SerpAPI key in Render as an environment variable named SERPAPI_KEY, then redeploy. ${type} prices will appear here after that.</p>
+        <div class="tag-row"><span class="tag">SERPAPI_KEY</span><span class="tag">Render env var</span></div>
+      </div>
+    </article>
+  `;
+}
+
+function moneyText(value) {
+  return value || "Price unavailable";
+}
+
+function assistantContext() {
+  return {
+    user: state.user || "Unknown",
+    mode: state.mode,
+    from: fullName(state.searched.from),
+    destination: fullName(state.searched.destination),
+    departureAirport: state.searched.from.airport,
+    arrivalAirport: state.searched.destination.airport,
+    depart: state.searched.depart,
+    returnDate: state.searched.returnDate,
+    activityDate: state.searched.activityDate,
+    travelers: state.searched.travelers,
+    currentFlights: state.latestFlights.slice(0, 6),
+    currentHotels: state.latestHotels.slice(0, 6),
+    suggestedActivities: featuredActivities[state.searched.destination.city] || state.searched.destination.activities,
+  };
+}
+
+async function askAssistant(message) {
+  const text = message.trim();
+  if (!text) return;
+  assistantReply.textContent = "Claude is thinking...";
+  const response = await fetch("/api/assistant", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      message: text,
+      context: assistantContext(),
+    }),
+  });
+  const payload = await response.json();
+  if (payload.setupRequired) {
+    assistantReply.textContent = "Add OPENROUTER_API_KEY in Render to enable Claude.";
+    return;
+  }
+  assistantReply.textContent = payload.error || payload.reply || "No response.";
+}
+
+async function renderFlightResults(s) {
+  loadingCards("Flights");
+  const params = new URLSearchParams({
+    departure_id: s.from.airport,
+    arrival_id: s.destination.airport,
+    outbound_date: s.depart,
+    return_date: s.returnDate,
+    adults: String(s.travelers),
+  });
+  const response = await fetch(`/api/flights?${params.toString()}`);
+  const payload = await response.json();
+  if (payload.setupRequired) return apiSetupMessage("Flight");
+  if (payload.error) {
+    results.innerHTML = `<div class="empty-state">${payload.error}</div>`;
+    return;
+  }
+
+  const lowest = payload.priceInsights?.lowest_price ? `$${payload.priceInsights.lowest_price}` : "";
+  dealSummary.innerHTML = `
+    <span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span>
+    <span class="summary-pill">${s.travelers} people</span>
+    <span class="summary-pill">${lowest ? `Lowest seen: ${lowest}` : "Google Flights results"}</span>
+  `;
+
+  if (!payload.results?.length) {
+    results.innerHTML = `<div class="empty-state">No Google Flights results came back for this search. Try nearby airports or different dates.</div>`;
+    return;
+  }
+
+  state.latestFlights = payload.results;
+
+  results.innerHTML = payload.results
+    .map(
+      (flight) => `
+        <article class="google-card flight-card">
+          ${flight.logo ? `<img class="provider-logo" src="${flight.logo}" alt="">` : `<div class="provider-logo text-logo">GF</div>`}
+          <div>
+            <div class="google-card-top">
+              <h3>${flight.airline}</h3>
+              <strong>${moneyText(flight.price)}</strong>
+            </div>
+            <p>${flight.departure} to ${flight.arrival} - ${flight.stops}${flight.duration ? ` - ${flight.duration}` : ""}</p>
+            <p>${flight.departTime || "Departure time unavailable"} to ${flight.arriveTime || "Arrival time unavailable"}</p>
+            <div class="tag-row">${flight.extensions.slice(0, 3).map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
+          </div>
+          <a target="_blank" rel="noreferrer" href="${flight.link}">Open Google Flights</a>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+async function renderHotelResults(s) {
+  loadingCards("Hotels");
+  const params = new URLSearchParams({
+    q: fullName(s.destination),
+    check_in_date: s.depart,
+    check_out_date: s.returnDate,
+    adults: String(s.travelers),
+  });
+  const response = await fetch(`/api/hotels?${params.toString()}`);
+  const payload = await response.json();
+  if (payload.setupRequired) return apiSetupMessage("Hotel");
+  if (payload.error) {
+    results.innerHTML = `<div class="empty-state">${payload.error}</div>`;
+    return;
+  }
+
+  dealSummary.innerHTML = `
+    <span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span>
+    <span class="summary-pill">${s.travelers} people</span>
+    <span class="summary-pill">Google Hotels prices</span>
+  `;
+
+  if (!payload.results?.length) {
+    results.innerHTML = `<div class="empty-state">No Google Hotels results came back for this search. Try a larger nearby city or different dates.</div>`;
+    return;
+  }
+
+  state.latestHotels = payload.results;
+
+  results.innerHTML = payload.results
+    .map(
+      (hotel) => `
+        <article class="google-card hotel-card">
+          ${hotel.image ? `<img class="hotel-thumb" src="${hotel.image}" alt="">` : `<div class="hotel-thumb text-logo">GH</div>`}
+          <div>
+            <div class="google-card-top">
+              <h3>${hotel.name}</h3>
+              <strong>${moneyText(hotel.price)}</strong>
+            </div>
+            <p>${hotel.address || fullName(s.destination)}</p>
+            <p>${hotel.rating ? `${hotel.rating} stars` : "Rating unavailable"}${hotel.reviews ? ` - ${hotel.reviews} reviews` : ""}${hotel.hotelClass ? ` - ${hotel.hotelClass}-star hotel` : ""}</p>
+            <div class="tag-row">${hotel.amenities.slice(0, 3).map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
+          </div>
+          <a target="_blank" rel="noreferrer" href="${hotel.link}">Open Google Hotels</a>
+        </article>
+      `,
+    )
+    .join("");
+}
+
 function renderResults() {
   const s = state.searched;
   guideTitle.textContent = fullName(s.destination);
@@ -327,36 +502,13 @@ function renderResults() {
   if (state.mode === "flights") {
     modeLabel.textContent = "Flight finder";
     resultsTitle.textContent = `${s.from.city} to ${s.destination.city}`;
-    dealSummary.innerHTML = `<span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span><span class="summary-pill">${s.travelers} people</span><span class="summary-pill">Direct airline sites</span>`;
-    const deals = airlines
-      .map(([name, url]) => {
-        return {
-          title: name,
-          body: `Open ${name} for ${s.from.airport} to ${s.destination.airport}, ${formatDate(s.depart)} to ${formatDate(s.returnDate)}. The exact current price appears on the airline site.`,
-          tags: ["Route included", "Dates included", "Direct provider search"],
-          href: airlineSearchUrl(name, url),
-          cta: "Open airline",
-        };
-      })
-      .slice(0, 6);
-    renderDealCards(deals);
+    renderFlightResults(s);
   }
 
   if (state.mode === "hotels") {
     modeLabel.textContent = "Hotel finder";
     resultsTitle.textContent = `Hotels in ${s.destination.city}`;
-    dealSummary.innerHTML = `<span class="summary-pill">${formatDate(s.depart)} - ${formatDate(s.returnDate)}</span><span class="summary-pill">${s.travelers} people</span><span class="summary-pill">Direct hotel brand sites</span>`;
-    const deals = hotelBrands
-      .map(([name, style, url]) => {
-        return {
-          title: name,
-          body: `${style}. Open the brand site with ${fullName(s.destination)}, check-in ${s.depart}, check-out ${s.returnDate}, and ${s.travelers} people attached to the link.`,
-          tags: ["Destination attached", "Dates attached", `${s.travelers} people`],
-          href: bookingHotelUrl(name, url),
-          cta: "Open hotel",
-        };
-      });
-    renderDealCards(deals);
+    renderHotelResults(s);
   }
 
   if (state.mode === "activities") {
@@ -566,6 +718,18 @@ commentForm.addEventListener("submit", (event) => {
   saveComments();
   commentInput.value = "";
   renderComments();
+});
+
+assistantForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  askAssistant(assistantInput.value);
+});
+
+document.querySelectorAll(".quick-ai").forEach((button) => {
+  button.addEventListener("click", () => {
+    assistantInput.value = button.dataset.prompt;
+    askAssistant(button.dataset.prompt);
+  });
 });
 
 fromInput.value = fullName(state.searched.from);

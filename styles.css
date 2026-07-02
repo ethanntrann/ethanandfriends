@@ -439,6 +439,79 @@ h1 {
   white-space: nowrap;
 }
 
+.google-card {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--white);
+}
+
+.google-card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.google-card h3,
+.google-card p {
+  margin: 0;
+}
+
+.google-card h3 {
+  font-size: 1.05rem;
+}
+
+.google-card p {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.google-card strong {
+  color: var(--blue-dark);
+  font-size: 1.08rem;
+  white-space: nowrap;
+}
+
+.google-card a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: var(--ink);
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.provider-logo,
+.hotel-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #eef5ff;
+}
+
+.provider-logo {
+  padding: 8px;
+}
+
+.text-logo {
+  display: grid;
+  place-items: center;
+  color: var(--blue-dark);
+  font-weight: 800;
+}
+
 .trip-panel {
   background: linear-gradient(160deg, #ffffff, var(--aqua));
 }
@@ -450,6 +523,66 @@ h1 {
   background: rgba(255, 255, 255, 0.74);
   color: #344054;
   line-height: 1.65;
+}
+
+.assistant-box {
+  margin-top: 18px;
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.assistant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quick-ai {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 12px;
+  background: var(--white);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.assistant-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.assistant-form textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #aeb8ca;
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--ink);
+  font: inherit;
+}
+
+.assistant-form button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--blue);
+  color: var(--white);
+  font-weight: 800;
+}
+
+.assistant-reply {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--white);
+  color: #344054;
+  line-height: 1.55;
+  white-space: pre-wrap;
 }
 
 .comments-box {
@@ -735,6 +868,15 @@ h1 {
 
   .deal-card {
     grid-template-columns: 1fr;
+  }
+
+  .google-card {
+    grid-template-columns: 1fr;
+  }
+
+  .google-card-top {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .price {

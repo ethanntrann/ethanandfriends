@@ -106,6 +106,22 @@
             <h2 id="guideTitle">London, United Kingdom</h2>
           </div>
           <div id="tripInsight" class="trip-insight"></div>
+          <section class="assistant-box" aria-label="AI assistant">
+            <div class="section-heading comments-heading">
+              <p>AI assistant</p>
+              <h2>Claude trip helper</h2>
+            </div>
+            <div class="assistant-actions">
+              <button class="quick-ai" type="button" data-prompt="Which current flight option looks cheapest and best for our route?">Best flight</button>
+              <button class="quick-ai" type="button" data-prompt="Which hotel options look like the best value for our dates and people?">Best hotel</button>
+              <button class="quick-ai" type="button" data-prompt="Suggest the best activities for this city and a simple one-day plan.">Activities</button>
+            </div>
+            <form id="assistantForm" class="assistant-form">
+              <textarea id="assistantInput" rows="4" placeholder="Ask Claude to compare flights, hotels, or activities..."></textarea>
+              <button type="submit">Ask Claude</button>
+            </form>
+            <div id="assistantReply" class="assistant-reply">Ask for help after searching flights or hotels.</div>
+          </section>
         </aside>
       </section>
 
