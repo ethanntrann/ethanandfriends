@@ -1,9 +1,9 @@
 const europeCities = [
-  ["London", "United Kingdom", "LON", 545, 154], ["Manchester", "United Kingdom", "MAN", 570, 122],
+  ["London", "United Kingdom", "LHR", 545, 154], ["Manchester", "United Kingdom", "MAN", 570, 122],
   ["Edinburgh", "United Kingdom", "EDI", 590, 138], ["Dublin", "Ireland", "DUB", 515, 145],
-  ["Paris", "France", "PAR", 560, 148], ["Nice", "France", "NCE", 625, 142],
+  ["Paris", "France", "CDG", 560, 148], ["Nice", "France", "NCE", 625, 142],
   ["Lyon", "France", "LYS", 610, 116], ["Marseille", "France", "MRS", 640, 118],
-  ["Rome", "Italy", "ROM", 620, 132], ["Milan", "Italy", "MIL", 590, 128],
+  ["Rome", "Italy", "FCO", 620, 132], ["Milan", "Italy", "MXP", 590, 128],
   ["Venice", "Italy", "VCE", 640, 155], ["Florence", "Italy", "FLR", 670, 145],
   ["Naples", "Italy", "NAP", 650, 106], ["Barcelona", "Spain", "BCN", 595, 137],
   ["Madrid", "Spain", "MAD", 575, 126], ["Seville", "Spain", "SVQ", 660, 104],
